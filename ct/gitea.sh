@@ -2,25 +2,26 @@
 source <(curl -s https://raw.githubusercontent.com/Obstein/Proxmox/tree/Proxmox-7/misc/build.func)
 # Copyright (c) 2021-2024 tteck
 # Author: tteck (tteckster)
+# Co-author: Rogue-King
 # License: MIT
 # https://github.com/tteck/Proxmox/raw/main/LICENSE
 
 function header_info {
 clear
 cat <<"EOF"
-    ____                     __               
-   / __ \_________ _      __/ /___  __________
-  / /_/ / ___/ __ \ | /| / / / __ `/ ___/ ___/
- / ____/ /  / /_/ / |/ |/ / / /_/ / /  / /    
-/_/   /_/   \____/|__/|__/_/\__,_/_/  /_/     
-                                              
+   ______ _  __
+  / ____/(_)/ /____  ____ _
+ / / __// // __/ _ \/ __  /
+/ /_/ // // /_/  __/ /_/ /
+\____//_/ \__/\___/\__,_/
+
 EOF
 }
 header_info
 echo -e "Loading..."
-APP="Prowlarr"
-var_disk="4"
-var_cpu="2"
+APP="Gitea"
+var_disk="8"
+var_cpu="1"
 var_ram="1024"
 var_os="debian"
 var_version="12"
@@ -54,8 +55,16 @@ function default_settings() {
 
 function update_script() {
 header_info
-if [[ ! -d /var/lib/prowlarr/ ]]; then msg_error "No ${APP} Installation Found!"; exit; fi
-msg_error "There is currently no update path available."
+if [[  ! -f /usr/local/bin/gitea ]]; then msg_error "No ${APP} Installation Found!"; exit; fi
+RELEASE=$(wget -q https://github.com/go-gitea/gitea/releases/latest -O - | grep "title>Release" | cut -d " " -f 4 | sed 's/^v//')
+msg_info "Updating $APP to ${RELEASE}"
+wget -q https://github.com/go-gitea/gitea/releases/download/v$RELEASE/gitea-$RELEASE-linux-amd64
+systemctl stop gitea
+rm -rf /usr/local/bin/gitea 
+mv gitea* /usr/local/bin/gitea
+chmod +x /usr/local/bin/gitea
+systemctl start gitea
+msg_ok "Updated $APP Successfully"
 exit
 }
 
@@ -65,4 +74,4 @@ description
 
 msg_ok "Completed Successfully!\n"
 echo -e "${APP} should be reachable by going to the following URL.
-         ${BL}http://${IP}:9696${CL} \n"
+         ${BL}http://${IP}:3000${CL} \n"
